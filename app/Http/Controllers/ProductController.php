@@ -8,9 +8,12 @@ use Intervention\Image\Laravel\Facades\Image;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $products = Product::query();
+        if($request->searchQuery != ''){
+            $products = Product::where('name','like','%'. $request->searchQuery . '%');
+        }
         $products = $products->latest()->paginate(2);
         return response()->json([
             'products' => $products

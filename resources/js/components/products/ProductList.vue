@@ -11,6 +11,19 @@
                     </button>
                 </div>
             </div>
+            <div class="table-search">
+                <div>
+                    <button class="search-select">
+                        Search Product
+                    </button>
+                    <span class="search-select-arrow">
+                        <i class="fas fa-caret-down"></i>
+                    </span>
+                </div>
+                <div class="relative">
+                    <input type="text" class="search-input" name="search" placeholder="Search product..." v-model="searchQuery">
+                </div>
+            </div> 
             <div class="table--heading mt-2 products__list__heading " style="padding-top: 20px;background:#FFF">
                 <!-- <p class="table--heading--col1">&#32;</p> -->
                 <p class="table--heading--col1">image</p>
@@ -65,28 +78,33 @@
 
 <script setup>
 import axios from 'axios';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter()
 
 let products = ref([])
 let links = ref([])
+let searchQuery = ref('')
+
+const newProduct = () => {
+    router.push('/products/create')
+}
 
 onMounted(async () => {
     getProducts()
 })
 
-const newProduct = () => {
-    router.push('/products/create')
-}
+watch(searchQuery, () => {
+    getProducts()
+})
 
 const productImage = (image) => {
     return "/upload/" + image
 }
 
 const getProducts = async () => {
-    let response = await axios.get('/api/products')
+    let response = await axios.get('/api/products?searchQuery='+searchQuery.value)
     .then((response) => {
         products.value = response.data.products.data
         links.value = response.data.products.links
