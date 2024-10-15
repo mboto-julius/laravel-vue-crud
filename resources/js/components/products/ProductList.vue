@@ -52,10 +52,10 @@
                     {{ product.quantity }}
                 </p>     
                 <div>     
-                    <button class="btn-icon btn-icon-success" >
+                    <button class="btn-icon btn-icon-success" @click="onEdit(product.id)">
                         <i class="fas fa-pencil-alt"></i>
                     </button>
-                    <button class="btn-icon btn-icon-danger" >
+                    <button class="btn-icon btn-icon-danger" @click="deleteProduct(product.id)">
                         <i class="far fa-trash-alt"></i>
                     </button>
                 </div>
@@ -120,6 +120,42 @@ const changePage = (link) => {
         products.value = response.data.products.data
         links.value = response.data.products.links
     })
+}
+
+const onEdit = (id) => {
+    router.push(`/products/${id}/edit`)
+}
+
+const deleteProduct = (id) => {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            axios.delete(`/api/products/${id}`)
+            .then(response => {
+                Swal.fire(
+                    'Deleted!',
+                    'Your item has been deleted.',
+                    'success'
+                );
+                location.reload(); 
+                getProducts()
+            })
+            .catch(error => {
+                Swal.fire(
+                    'Error!',
+                    'There was an error deleting the item.',
+                    'error'
+                );
+            });
+        }
+    });
 }
  
 </script>

@@ -3,10 +3,14 @@
         <div class="products__create ">
             <div class="products__create__titlebar dflex justify-content-between align-items-center">
                 <div class="products__create__titlebar--item">
-                    <h1 class="my-1">Add Product</h1>
+                    <h1 class="my-1">
+                        <span v-if="editMode">Edit</span>
+                        <span v-else>Add</span>
+                        Product
+                    </h1>
                 </div>
                 <div class="products__create__titlebar--item">
-                    <router-link to="/" class="btn btn-secondary ml-1" >
+                    <router-link to="/" class="btn btn-secondary ml-1">
                         Back
                     </router-link>
                 </div>
@@ -68,7 +72,7 @@
             <!-- Footer Bar -->
             <div class="dflex justify-content-between align-items-center my-3">
                 <p ></p>
-                <button @click="addProduct" class="btn btn-secondary">Save</button>
+                <button @click="handleSave" class="btn btn-secondary">Save</button>
             </div>
         </div>
     </section>
@@ -77,8 +81,8 @@
 <script setup>
 
 import axios from 'axios';
-import { reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { onMounted, reactive, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 const data = reactive({
     name: "",
@@ -91,7 +95,31 @@ const data = reactive({
 
 const router = useRouter();
 
+const route = useRoute()
+
 let errors = ref([])
+
+const editMode = ref(false)
+
+onMounted(() => {
+    if(route.name === 'products.edit'){
+        editMode.value = true
+        getProduct()
+    }
+})
+
+const getProduct = async () => {
+    let response = await axios.get(`/api/products/${route.params.id}/edit`)
+    .then((response) => {
+        data.name = response.data.products.name
+        data.description = response.data.products.description
+        data.image = response.data.products.image
+        data.type = response.data.products.type
+        data.quantity = response.data.products.quantity
+        data.price = response.data.products.price
+    })
+}
+
 
 const getImage = () => {
     let image = "/upload/no-image.jpg"
@@ -114,11 +142,32 @@ const handleFileChange = (e) => {
     reader.readAsDataURL(file)
 }
 
-const addProduct = () => {
+const handleSave = (values, actions) => {
+    if(editMode.value){
+        updateProduct(values, actions)
+    }else{
+        addProduct(values, actions)
+    }
+}
+
+const addProduct = (values, actions) => {
     axios.post('/api/products', data)
     .then((response) => {
         router.push('/')
         toast.fire({ icon: "success", title: "Product added successfully" })
+    })
+    .catch((error) => {
+        if(error.response.status === 422){
+            errors.value = error.response.data.errors
+        }
+    })
+}
+
+const updateProduct = (values, actions) => {
+    axios.put(`/api/products/${route.params.id}`, data)
+    .then((response) => {
+        router.push('/')
+        toast.fire({ icon: "success", title: "Product updated successfully" })
     })
     .catch((error) => {
         if(error.response.status === 422){
